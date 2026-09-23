@@ -174,6 +174,70 @@ describe("LspManager", () => {
 		}
 	});
 
+	it("#given server initTimeoutMs longer than manager default #when init exceeds manager default #then reaper does not evict it", async () => {
+		// given
+		vi.useFakeTimers();
+		try {
+			const { manager, clients, now } = setupManager({
+				idleTimeoutMs: 60_000,
+				initTimeoutMs: 1_000,
+				reaperIntervalMs: 100,
+				clientFactoryOptions: () => ({ initDelayMs: 60_000 }),
+			});
+			// per-server override raises the effective timeout well above the manager default
+			const server = makeServer("kotlin", [".kt"], { initTimeoutMs: 10_000 });
+			const acquisition = manager.getClient("/root/a", server);
+			void acquisition.catch(() => {});
+
+			await Promise.resolve();
+			expect(manager.getSnapshot()).toHaveLength(1);
+
+			// when: past the manager default (1_000ms) but still under the server override (10_000ms)
+			now.value += 2_000;
+			vi.advanceTimersByTime(150);
+
+			// then: the reaper must consult the per-server override, not the manager default
+			expect(manager.getSnapshot()).toHaveLength(1);
+			expect(firstClient(clients).stopCallCount).toBe(0);
+
+			await manager.stopAll();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("#given server initTimeoutMs shorter than manager default #when init exceeds the override #then reaper evicts it early", async () => {
+		// given
+		vi.useFakeTimers();
+		try {
+			const { manager, clients, now } = setupManager({
+				idleTimeoutMs: 60_000,
+				initTimeoutMs: 10_000,
+				reaperIntervalMs: 100,
+				clientFactoryOptions: () => ({ initDelayMs: 60_000 }),
+			});
+			// per-server override lowers the effective timeout below the manager default
+			const server = makeServer("flaky", [".flaky"], { initTimeoutMs: 500 });
+			const acquisition = manager.getClient("/root/a", server);
+			void acquisition.catch(() => {});
+
+			await Promise.resolve();
+			expect(manager.getSnapshot()).toHaveLength(1);
+
+			// when: past the server override (500ms) but still under the manager default (10_000ms)
+			now.value += 1_000;
+			vi.advanceTimersByTime(150);
+
+			// then: the reaper must consult the per-server override, not the manager default
+			expect(firstClient(clients).stopCallCount).toBeGreaterThan(0);
+			expect(manager.getSnapshot()).toEqual([]);
+
+			await manager.stopAll();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("#given failed warmup #when later getClient #then key was deleted and a fresh client is built", async () => {
 		// given
 		let firstCall = true;

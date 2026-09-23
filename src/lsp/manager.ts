@@ -10,6 +10,8 @@ interface ManagedClient {
 	initPromise: Promise<void> | null;
 	isInitializing: boolean;
 	initializingSince: number | null;
+	/** Effective init timeout for this specific client: server.initTimeoutMs ?? manager default. */
+	initTimeoutMs: number;
 }
 
 export interface ClientSnapshot {
@@ -120,7 +122,7 @@ export class LspManager {
 			if (
 				managed.isInitializing &&
 				managed.initializingSince !== null &&
-				t - managed.initializingSince > this.initTimeoutMs
+				t - managed.initializingSince > managed.initTimeoutMs
 			) {
 				managed.client.stop().catch(() => {});
 				this.clients.delete(key);
@@ -165,7 +167,7 @@ export class LspManager {
 			if (
 				managed.isInitializing &&
 				managed.initializingSince !== null &&
-				t - managed.initializingSince > this.initTimeoutMs
+				t - managed.initializingSince > managed.initTimeoutMs
 			) {
 				await managed.client.stop().catch(() => {});
 				this.clients.delete(key);
@@ -217,6 +219,7 @@ export class LspManager {
 			initPromise,
 			isInitializing: true,
 			initializingSince: initStartedAt,
+			initTimeoutMs: server.initTimeoutMs ?? this.initTimeoutMs,
 		};
 		this.clients.set(key, newManaged);
 
@@ -284,6 +287,7 @@ export class LspManager {
 			initPromise,
 			isInitializing: true,
 			initializingSince: initStartedAt,
+			initTimeoutMs: server.initTimeoutMs ?? this.initTimeoutMs,
 		};
 		this.clients.set(key, managed);
 
