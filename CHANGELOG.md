@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-24
+
+### Added
+
+- Per-server `requestTimeoutMs` and `initTimeoutMs` overrides in
+  `.pi/lsp-client.json` / `~/.pi/lsp-client.json`
+  ([#5](https://github.com/code-yeongyu/pi-lsp-client/pull/5), thanks
+  [@mixxer](https://github.com/mixxer)). The overrides now reach the tool
+  resolution path, and only finite positive numbers are accepted.
+
+### Fixed
+
+- `/lsp warmup <id>` resolves ids through the merged server list, so custom
+  servers from `.pi/lsp-client.json` can be warmed up
+  ([#4](https://github.com/code-yeongyu/pi-lsp-client/issues/4)).
+
+### Changed
+
+- `vscode-jsonrpc` `^8.2.1` -> `^9.0.2` (major). The transport imports the
+  `vscode-jsonrpc/node` subpath export.
+- Dev dependencies pinned exact: `@biomejs/biome` 2.5.5 -> 2.5.14, `vitest`
+  ^4.1.5 -> 5.0.1, `typescript` ^7.0.2 -> 7.0.2, `@types/node` ^22.10.5 ->
+  26.6.2, `@typescript/native-preview` ^7.0.0-dev.20260120.1 ->
+  7.0.0-dev.20260707.2. Added `@earendil-works/pi-ai`,
+  `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.87.1 as
+  dev dependencies so tests run against the current upstream runtime.
+- Peer dependencies are limited to `@earendil-works/pi-*` (`*`). The
+  `typebox` peer was dropped; `Type` is imported from `@earendil-works/pi-ai`.
+- `engines.node` `>=20.0.0` -> `>=22.19.0`, matching `pi-coding-agent`.
+- Biome config migrated to the 2.5.14 schema.
+- CI runs on Bun 1.4.2 (`bun install --frozen-lockfile`, `bun run check`,
+  `bun run test`, `npm pack --dry-run`) across ubuntu/macos x node 22/24,
+  plus an `npm ci && npm test` consumer job. `bun.lock` added next to
+  `package-lock.json`.
+
+## [0.1.0]
+
+Initial version (never tagged).
+
 ### Added
 
 - Initial release porting omo's LSP tool stack as a pi-coding-agent extension.

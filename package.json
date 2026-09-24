@@ -1,6 +1,6 @@
 {
 	"name": "pi-lsp-client",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Language Server Protocol integration for pi-mono coding-agent. Ports omo's LSP tool stack as a pi extension with shared server pool, refCount lifecycle, idle/init reaping, typed crash retry, and a /lsp inspector.",
 	"type": "module",
 	"license": "MIT",
