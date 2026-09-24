@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import type { ExtensionAPI, ExtensionContext, ToolResultEvent } from "@earendil-works/pi-coding-agent";
 
+import { getMergedServers } from "./lsp/config-loader.js";
 import { LspInspectorComponent } from "./lsp/inspector.js";
 import { disposeDefaultLspManager, getLspManager } from "./lsp/manager.js";
 import {
@@ -281,22 +282,15 @@ async function runInstall(id: string, ctx: ExtensionContext): Promise<void> {
 }
 
 function runWarmup(id: string, ctx: ExtensionContext): void {
-	const def = BUILTIN_SERVERS[id];
-	if (!def) {
+	const server = getMergedServers().find((candidate) => candidate.id === id);
+	if (!server) {
 		ctx.ui.notify(`Unknown server id '${id}'.`, "error");
 		return;
 	}
 
 	try {
-		const manager = getLspManager();
-		manager.warmupClient(ctx.cwd, {
-			id,
-			command: def.command,
-			extensions: def.extensions,
-			priority: 0,
-			...(def.env !== undefined ? { env: def.env } : {}),
-			...(def.initialization !== undefined ? { initialization: def.initialization } : {}),
-		});
+		const { source: _source, ...resolved } = server;
+		getLspManager().warmupClient(ctx.cwd, resolved);
 		ctx.ui.notify(`Warming up '${id}' in background`, "info");
 	} catch (err) {
 		ctx.ui.notify(`Warmup '${id}' failed: ${err instanceof Error ? err.message : String(err)}`, "error");
