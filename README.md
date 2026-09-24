@@ -156,7 +156,7 @@ Add custom servers by creating either:
 - `.pi/lsp-client.json` (project-local, takes priority)
 - `~/.pi/lsp-client.json` (user-global)
 
-```jsonc
+```json
 {
   "lsp": {
     "my-server": {
@@ -171,8 +171,6 @@ Add custom servers by creating either:
     "kotlin-language-server": {
       "command": ["kotlin-language-server"],
       "extensions": [".kt", ".kts"],
-      // Some servers take much longer than the defaults on large,
-      // multi-module projects — override per-server instead of a global bump.
       "requestTimeoutMs": 90000,
       "initTimeoutMs": 90000
     }
@@ -182,7 +180,7 @@ Add custom servers by creating either:
 
 `disabled: true` removes a builtin server from resolution. Project config wins over user config. Builtins are the lowest priority (only used when no project/user override exists).
 
-`requestTimeoutMs` and `initTimeoutMs` override the global `REQUEST_TIMEOUT_MS` / `INIT_TIMEOUT_MS` defaults (15s / 60s) for that one server only. Useful for servers whose `initialize` handshake does real project analysis (e.g. `kotlin-language-server` importing a large Gradle multi-module project) and routinely exceeds the defaults on some workspaces but not others.
+`requestTimeoutMs` and `initTimeoutMs` override the global `REQUEST_TIMEOUT_MS` / `INIT_TIMEOUT_MS` defaults (15s / 60s) for that one server only. Values must be positive numbers of milliseconds; anything else is ignored and the default applies. The config file is parsed as plain JSON, so comments are not allowed. Useful for servers whose `initialize` handshake does real project analysis (e.g. `kotlin-language-server` importing a large Gradle multi-module project) and routinely exceeds the defaults on some workspaces but not others.
 
 ## Lifecycle
 

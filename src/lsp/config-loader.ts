@@ -43,6 +43,10 @@ function loadJsonFile(path: string): ConfigJson | null {
 	}
 }
 
+function isPositiveTimeout(value: unknown): value is number {
+	return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
 export function loadAllConfigs(): Map<ConfigSource, ConfigJson> {
 	const paths = getConfigPaths();
 	const configs = new Map<ConfigSource, ConfigJson>();
@@ -84,8 +88,8 @@ export function getMergedServers(): ServerWithSource[] {
 				priority: entry.priority ?? 0,
 				...(entry.env !== undefined ? { env: entry.env } : {}),
 				...(entry.initialization !== undefined ? { initialization: entry.initialization } : {}),
-				...(entry.requestTimeoutMs !== undefined ? { requestTimeoutMs: entry.requestTimeoutMs } : {}),
-				...(entry.initTimeoutMs !== undefined ? { initTimeoutMs: entry.initTimeoutMs } : {}),
+				...(isPositiveTimeout(entry.requestTimeoutMs) ? { requestTimeoutMs: entry.requestTimeoutMs } : {}),
+				...(isPositiveTimeout(entry.initTimeoutMs) ? { initTimeoutMs: entry.initTimeoutMs } : {}),
 				source,
 			});
 			seen.add(id);
