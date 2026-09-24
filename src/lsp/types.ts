@@ -5,6 +5,10 @@ export interface LspServerConfig {
 	disabled?: boolean;
 	env?: Record<string, string>;
 	initialization?: Record<string, unknown>;
+	/** Per-server override for a single LSP request's timeout (ms). Falls back to REQUEST_TIMEOUT_MS. */
+	requestTimeoutMs?: number;
+	/** Per-server override for how long `initialize` may take before the manager gives up (ms). Falls back to INIT_TIMEOUT_MS. */
+	initTimeoutMs?: number;
 }
 
 export interface ResolvedServer {
@@ -14,6 +18,8 @@ export interface ResolvedServer {
 	priority: number;
 	env?: Record<string, string>;
 	initialization?: Record<string, unknown>;
+	requestTimeoutMs?: number;
+	initTimeoutMs?: number;
 }
 
 export interface ServerLookupInfo {

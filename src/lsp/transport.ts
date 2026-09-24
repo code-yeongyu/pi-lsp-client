@@ -133,7 +133,7 @@ export class LspClientTransport {
 			timeoutHandle = setTimeout(() => {
 				const stderrTail = this.stderrBuffer.slice(-5).join("\n");
 				reject(new LspRequestTimeoutError(method, stderrTail || undefined));
-			}, REQUEST_TIMEOUT_MS);
+			}, this.server.requestTimeoutMs ?? REQUEST_TIMEOUT_MS);
 		});
 
 		try {

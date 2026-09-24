@@ -156,7 +156,7 @@ Add custom servers by creating either:
 - `.pi/lsp-client.json` (project-local, takes priority)
 - `~/.pi/lsp-client.json` (user-global)
 
-```jsonc
+```json
 {
   "lsp": {
     "my-server": {
@@ -167,6 +167,12 @@ Add custom servers by creating either:
     },
     "biome": {
       "disabled": true
+    },
+    "kotlin-language-server": {
+      "command": ["kotlin-language-server"],
+      "extensions": [".kt", ".kts"],
+      "requestTimeoutMs": 90000,
+      "initTimeoutMs": 90000
     }
   }
 }
@@ -174,12 +180,14 @@ Add custom servers by creating either:
 
 `disabled: true` removes a builtin server from resolution. Project config wins over user config. Builtins are the lowest priority (only used when no project/user override exists).
 
+`requestTimeoutMs` and `initTimeoutMs` override the global `REQUEST_TIMEOUT_MS` / `INIT_TIMEOUT_MS` defaults (15s / 60s) for that one server only. Values must be positive numbers of milliseconds; anything else is ignored and the default applies. The config file is parsed as plain JSON, so comments are not allowed. Useful for servers whose `initialize` handshake does real project analysis (e.g. `kotlin-language-server` importing a large Gradle multi-module project) and routinely exceeds the defaults on some workspaces but not others.
+
 ## Lifecycle
 
 - **Lazy spawn.** Servers spawn on first tool call for a matching extension. No eager warmup of the entire registry.
 - **Refcount.** Each `withLspClient(...)` call increments refCount on entry and decrements in `finally`. Idle reaping fires only when refCount hits zero AND lastUsedAt is older than the idle timeout.
 - **Idle timeout: 5 minutes.** Idle clients are stopped and removed from the pool.
-- **Init timeout: 60 seconds.** A pending init older than 60s is reaped, even if other callers are waiting on it.
+- **Init timeout: 60 seconds by default, overridable per-server.** A pending init older than the effective timeout is reaped, even if other callers are waiting on it. Set `initTimeoutMs` on a server entry in `.pi/lsp-client.json` to raise (or lower) this for that server only — see [Custom Servers / Configuration](#custom-servers--configuration).
 - **Abort-aware acquisition.** `getClient(root, server, signal?)` participates in tool cancellation. If the signal aborts before init resolves, the caller is removed from the waiter list; if no callers remain, the initializing client is stopped and removed.
 - **Crash retry.** When the JSON-RPC transport throws `LspConnectionClosedError` or `LspProcessExitedError` mid-call, the wrapper evicts the dead client and retries exactly once for idempotent read tools (`diagnostics`, `goto_definition`, `find_references`, `symbols`, `prepare_rename`). Mutating tools (`rename`) are never retried.
 - **Session shutdown is the primary cleanup boundary.** `pi.on("session_shutdown", ...)` calls `disposeDefaultLspManager()` (stops all clients, clears the reaper interval, unregisters the process exit fallback) and clears `pi-lsp` status/widget keys.

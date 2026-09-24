@@ -68,11 +68,16 @@ export class FakeLspClient extends LspClient {
 	}
 }
 
-export function makeServer(id: string, extensions: string[] = [".ts"]): ResolvedServer {
+export function makeServer(
+	id: string,
+	extensions: string[] = [".ts"],
+	overrides: Pick<ResolvedServer, "requestTimeoutMs" | "initTimeoutMs"> = {},
+): ResolvedServer {
 	return {
 		id,
 		command: ["fake-server", "--stdio"],
 		extensions,
 		priority: 0,
+		...overrides,
 	};
 }

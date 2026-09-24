@@ -1,5 +1,5 @@
 import { PassThrough } from "node:stream";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	createMessageConnection,
 	type MessageConnection,
@@ -7,8 +7,10 @@ import {
 	StreamMessageWriter,
 } from "vscode-jsonrpc/node.js";
 
-import { LspConnectionClosedError } from "../src/lsp/errors.js";
+import { REQUEST_TIMEOUT_MS } from "../src/lsp/constants.js";
+import { LspConnectionClosedError, LspRequestTimeoutError } from "../src/lsp/errors.js";
 import { LspClientTransport } from "../src/lsp/transport.js";
+import type { ResolvedServer } from "../src/lsp/types.js";
 
 import { makeServer } from "./helpers/fake-lsp-client.js";
 
@@ -75,7 +77,82 @@ class StopHarness extends LspClientTransport {
 	}
 }
 
+class UnresponsiveHarness extends LspClientTransport {
+	private readonly input = new PassThrough();
+	private readonly output = new PassThrough();
+
+	constructor(server: ResolvedServer) {
+		super("/root/a", server);
+		const connection: MessageConnection = createMessageConnection(
+			new StreamMessageReader(this.input),
+			new StreamMessageWriter(this.output),
+		);
+		connection.listen();
+		this.connection = connection;
+	}
+
+	// Server never replies — this is the only way to exercise the timeout path
+	// without a real subprocess.
+	requestThatNeverResolves(): Promise<unknown> {
+		return this.sendRequest("initialize", {});
+	}
+
+	disposeHarness(): void {
+		this.connection?.dispose();
+		this.input.destroy();
+		this.output.destroy();
+	}
+}
+
 describe("LspClientTransport", () => {
+	it("#given server with no requestTimeoutMs override #when request never resolves #then it times out at the default", async () => {
+		// given
+		vi.useFakeTimers();
+		const harness = new UnresponsiveHarness(makeServer("typescript"));
+
+		try {
+			// when
+			const pending = harness.requestThatNeverResolves();
+			const assertion = expect(pending).rejects.toBeInstanceOf(LspRequestTimeoutError);
+			await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS);
+
+			// then
+			await assertion;
+		} finally {
+			harness.disposeHarness();
+			vi.useRealTimers();
+		}
+	});
+
+	it("#given server with a longer requestTimeoutMs override #when request outlives the default #then it does not time out early", async () => {
+		// given
+		vi.useFakeTimers();
+		const harness = new UnresponsiveHarness(
+			makeServer("kotlin", [".kt"], { requestTimeoutMs: REQUEST_TIMEOUT_MS * 3 }),
+		);
+
+		try {
+			// when: advance past the global default but still under the override
+			const pending = harness.requestThatNeverResolves();
+			let settled = false;
+			pending.catch(() => {
+				settled = true;
+			});
+			await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS + 1_000);
+
+			// then: the request must still be pending — the override, not the default, governs it
+			expect(settled).toBe(false);
+
+			// cleanup: let it actually time out so nothing is left dangling
+			await expect(vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS * 3).then(() => pending)).rejects.toBeInstanceOf(
+				LspRequestTimeoutError,
+			);
+		} finally {
+			harness.disposeHarness();
+			vi.useRealTimers();
+		}
+	});
+
 	it("#given destroyed json-rpc writer #when notification is sent #then write failure rejects to caller", async () => {
 		// given
 		const harness = new NotificationHarness();
