@@ -1,6 +1,5 @@
-import { StringEnum } from "@earendil-works/pi-ai";
+import { StringEnum, Type } from "@earendil-works/pi-ai";
 import { defineTool } from "@earendil-works/pi-coding-agent";
-import { Type } from "typebox";
 
 import { withLspClient } from "../client-wrapper.js";
 import { DEFAULT_MAX_SYMBOLS } from "../constants.js";
