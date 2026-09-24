@@ -1,4 +1,4 @@
-import { Type } from "typebox";
+import { Type } from "@earendil-works/pi-ai";
 import { describe, expect, it } from "vitest";
 
 import { lsp_diagnostics } from "../src/lsp/tools/diagnostics.js";

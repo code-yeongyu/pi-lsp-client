@@ -5,7 +5,7 @@ import {
 	type MessageConnection,
 	StreamMessageReader,
 	StreamMessageWriter,
-} from "vscode-jsonrpc/node.js";
+} from "vscode-jsonrpc/node";
 
 import { REQUEST_TIMEOUT_MS } from "../src/lsp/constants.js";
 import { LspConnectionClosedError, LspRequestTimeoutError } from "../src/lsp/errors.js";

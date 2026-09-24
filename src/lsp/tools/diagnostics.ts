@@ -1,7 +1,6 @@
 import { resolve } from "node:path";
-import { StringEnum } from "@earendil-works/pi-ai";
+import { StringEnum, Type } from "@earendil-works/pi-ai";
 import { defineTool } from "@earendil-works/pi-coding-agent";
-import { Type } from "typebox";
 
 import { isDirectoryPath, withLspClient } from "../client-wrapper.js";
 import { DEFAULT_MAX_DIAGNOSTICS } from "../constants.js";
