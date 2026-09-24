@@ -42,7 +42,7 @@ Pick whichever route fits:
 
 ```bash
 # 1. From npm (once published)
-pi install npm:@code-yeongyu/pi-lsp-client
+pi install npm:pi-lsp-client
 
 # 2. From git (once the repository is pushed)
 pi install git:github.com/code-yeongyu/pi-lsp-client
@@ -214,12 +214,14 @@ Add custom servers by creating either:
 ```bash
 git clone https://github.com/code-yeongyu/pi-lsp-client
 cd pi-lsp-client
-npm install            # install dev + peer dependencies
-npm test               # run vitest
-npm run typecheck      # strict tsc --noEmit
-npm run check          # tsc + biome
+bun install            # install dev dependencies (Bun 1.4.2, bun.lock)
+bun run test           # run vitest (tests execute on Node)
+bun run typecheck      # strict tsgo --noEmit
+bun run check          # tsgo + biome
 pi -e ./src/index.ts   # smoke-test inside a real pi session
 ```
+
+Bun is the dev and CI toolchain; the extension runtime stays Node-only. `package-lock.json` is kept in sync so `npm ci && npm test` also works (CI runs it as an npm-consumer job). Requires Node >= 22.19.0.
 
 The test suite uses vitest. Test descriptions follow `#given .. #when .. #then` style; bodies use plain `// given / // when / // then` comments. No `any`, no enums.
 
