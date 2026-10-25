@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- CI and the development docs use Bun 1.4.4 (was 1.4.2).
+
 ## [0.2.0] - 2026-09-24
 
 ### Added

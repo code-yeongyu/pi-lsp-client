@@ -14,7 +14,7 @@ Conventions for human contributors and AI agents working on this repository.
 
 ## Commands
 
-- `bun install` — install dev dependencies (Bun 1.4.2, `bun.lock`). Run after clone.
+- `bun install` — install dev dependencies (Bun 1.4.4, `bun.lock`). Run after clone.
 - `bun run test` — run vitest test suite once (tests execute on Node).
 - `bun run typecheck` — strict TypeScript check (no emit).
 - `bun run check` — type check + biome.

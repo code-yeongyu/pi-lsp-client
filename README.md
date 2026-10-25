@@ -214,7 +214,7 @@ Add custom servers by creating either:
 ```bash
 git clone https://github.com/code-yeongyu/pi-lsp-client
 cd pi-lsp-client
-bun install            # install dev dependencies (Bun 1.4.2, bun.lock)
+bun install            # install dev dependencies (Bun 1.4.4, bun.lock)
 bun run test           # run vitest (tests execute on Node)
 bun run typecheck      # strict tsgo --noEmit
 bun run check          # tsgo + biome
